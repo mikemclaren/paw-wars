@@ -6,6 +6,8 @@
   "scripts": {
     "start": "nodemon -e js,json,hbs index.js",
     "docker": "node index.js",
+    "docker-build": "docker build -t paw-wars .",
+    "docker-run": "docker run --rm -p 5050:5050 paw-wars",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
