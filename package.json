@@ -8,7 +8,8 @@
     "docker": "node index.js",
     "docker-build": "docker build -t paw-wars .",
     "docker-run": "docker run --rm -p 5050:5050 paw-wars",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node helpers/seed.js"
   },
   "repository": {
     "type": "git",

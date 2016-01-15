@@ -16,28 +16,13 @@ module.exports.index = function* index(){
 	}
 	life = this.session.life;
 	if (!life){
-		throw new Error("No life found / marketController:index");
+		throw new Error("No life found / bankController:index");
 	}
-	let i = 0;
-	while (i < items.length){
-		// loop through items and prices, merge them together
-		items[i].price = life.listings.market[i].price;
-		items[i].units = life.listings.market[i].units;
-		i++;
-	}
-	life.listings.market.sort(sortByPrice);
-	items.sort(sortByPrice);
-	yield this.render('game_market', {
+	yield this.render('game_bank', {
 		title: config.site.name,
 		player: player,
-		life: life,
-		items: items,
-		script: "game_market"
+		life: life
 	});
-
-	function sortByPrice(a, b){
-		return Number(a.price) - Number(b.price);
-	}
 }
 
 module.exports.transaction = function* transaction(){
@@ -47,7 +32,54 @@ module.exports.transaction = function* transaction(){
 	}
 	life = this.session.life;
 	if (!life){
-		throw new Error("No life found / marketController:transaction");
+		throw new Error("No life found / bankController:transaction");
+	}
+	let parameters;
+	// figure out which type of transaction they want to be doing here
+	if (this.request.body.type == "deposit"){
+		// they posted, this means it's a deposit
+		parameters = this.request.body;
+	}else if (this.request.query.type == "withdraw"){
+		// this got, this means it's a get
+		parameters = this.request.query;
+	}else{
+		console.log(this.request.query);
+		return this.body = {error: true, message: "Invalid type passed"};
+	}
+	// let's start doing some checks
+	parameters.amount = parseFloat(parameters.amount);
+	// is this a valid amount?
+	if (parameters.amount <= 0){
+		return this.body = {error: true, message: "Bad unit amount"};
+	}
+	// is this the right life ID?
+	if (life.id != parameters.id){
+		return this.body = {error: "Bad ID"};
+	}
+	// we've passed checks at this point
+	let transaction = {
+		id: Date.now(),
+		type: parameters.type,
+		amount: parameters.amount
+	};
+	life = yield lifeModel.doBankTransaction(life.id, transaction);
+	if (life.error){
+		// something went wrong during the process
+		return this.body = {error: true, message: life.message};
+	}
+	// update the session
+	this.session.life = life;
+	this.body = {error: false, life: life};
+}
+
+module.exports.lending = function* lending(){
+	if (this.isAuthenticated()) {
+		player = this.session.passport.user;
+		// TODO: add an else in here to redirect, but it's too much of pain atm
+	}
+	life = this.session.life;
+	if (!life){
+		throw new Error("No life found / bankController:withdraw");
 	}
 	let parameters = this.request.body;
 	if (!parameters){
